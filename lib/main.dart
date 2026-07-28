@@ -11,6 +11,8 @@ import 'presentation/views/chat_view.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/providers/theme_provider.dart';
 import 'presentation/providers/auth_provider.dart';
+import 'presentation/providers/notification_provider.dart';
+import 'presentation/widgets/in_app_notification.dart';
 import 'domain/models/usuario.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -68,9 +70,18 @@ class _MyAppState extends ConsumerState<MyApp> {
     _localNotifications.initialize(
       settings: const InitializationSettings(android: androidSettings, iOS: iosSettings),
     );
-    _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+    final androidPlugin = _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        'high_importance_channel',
+        'Notificaciones',
+        description: 'Notificaciones de chats',
+        importance: Importance.high,
+        playSound: true,
+      ),
+    );
+    androidPlugin?.requestNotificationsPermission();
   }
 
   void _saveFcmTokenOnInit() {
@@ -93,6 +104,14 @@ class _MyAppState extends ConsumerState<MyApp> {
       final senderUid = message.data['otroUid'] as String?;
       if (senderUid == FirebaseAuth.instance.currentUser?.uid) return;
 
+      inAppNotificationNotifier.value = InAppNotificationData(
+        title: notification.title ?? '',
+        body: notification.body ?? '',
+        chatId: message.data['chatId'] as String? ?? '',
+        otroUid: message.data['otroUid'] as String? ?? '',
+        otroNombre: message.data['otroNombre'] as String? ?? '',
+      );
+
       _localNotifications.show(
         id: notification.hashCode,
         title: notification.title,
@@ -104,6 +123,7 @@ class _MyAppState extends ConsumerState<MyApp> {
             channelDescription: 'Notificaciones de chats',
             importance: Importance.high,
             priority: Priority.high,
+            fullScreenIntent: true,
           ),
           iOS: DarwinNotificationDetails(),
         ),
@@ -143,6 +163,15 @@ class _MyAppState extends ConsumerState<MyApp> {
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
       home: const SplashView(),
+      builder: (context, child) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            child!,
+            const InAppNotificationBanner(),
+          ],
+        );
+      },
     );
   }
 }

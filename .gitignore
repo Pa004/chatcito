@@ -46,3 +46,10 @@ app.*.map.json
 
 # Firebase service account credentials
 lib/data/services/fcm_config.dart
+
+# Firebase config (regenerados con flutterfire configure)
+android/app/google-services.json
+lib/firebase_options.dart
+
+# Archivos sobrantes
+flutter_01.png

@@ -54,6 +54,13 @@ class FcmService {
               'otroUid': otroUid,
               'otroNombre': otroNombre,
             },
+            'android': {
+              'priority': 'high',
+              'notification': {
+                'channel_id': 'high_importance_channel',
+                'sound': 'default',
+              },
+            },
           },
         }),
       );
